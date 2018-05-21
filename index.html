@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/png" href="img/logo.png" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.12/css/all.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Versus</title>
+</head>
+
+<body>
+    <header class="d-flex justify-content-between align-items-center">
+        <a href="index.html">
+            <img class="logo" src="img/main-logo.png" alt="logo">
+        </a>
+        <button class="btn btn-outline-danger btn-create" data-toggle="modal" data-target="#create-modal">
+            <i class="fas fa-plus"></i>Create</button>
+    </header>
+
+    <div class="container main-container">
+        <h1>Choose your favorite!</h1>
+
+        <div class="container d-flex flex-column justify-content-center align-items-center polls-container">
+            <div id="escapingBallG">
+                <div id="escapingBall_1" class="escapingBallG"></div>
+            </div>
+            <!-- <div class="d-flex flex-column align-items-center vote">
+                <div class="w-100 vote-header">
+                    Who is stronger?
+                </div>
+                <div class="d-flex align-items-center vote-body">
+                    <div class="d-flex flex-column align-items-center option">
+                        <div class="option-header">
+
+                        </div>
+                        <div class="option-body">
+                            <button class="btn-choose">
+                                <img class="option-image" src="https://vignette.wikia.nocookie.net/clubpenguinpookie/images/7/77/Pikachu.png/revision/latest?cb=20140311111234">
+                            </button>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center align-items-center option-footer">
+                            Pikachu
+                            <span>73 votes</span>
+                        </div>
+                    </div>
+                    <div class="vs">
+                        <img src="img/logo.png" style="width: 50px">
+                    </div>
+                    <div class="d-flex flex-column align-items-center option">
+                        <div class="option-header">
+
+                        </div>
+                        <div class="option-body">
+                            <button class="btn-choose">
+                                <img class="option-image" src="https://vignette.wikia.nocookie.net/pokemon-fano/images/4/43/Bulbasaur.png/revision/latest?cb=20140515222419">
+                            </button>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center align-items-center option-footer">
+                            Bulbasaur
+                            <span>12 votes</span>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container">Powered by Nebulas</div>
+    </footer>
+
+    <div class="modal" tabindex="-1" role="dialog" id="create-modal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create new poll</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-form">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="first">First option</label>
+                            <input type="text" class="form-control" id="first" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="first-image">First option image (optional)</label>
+                            <input type="text" class="form-control" id="first-image">
+                        </div>
+                        <div class="form-group">
+                            <label for="second">Second option</label>
+                            <input type="text" class="form-control" id="second" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="second-image">Second option image (optional)</label>
+                            <input type="text" class="form-control" id="second-image">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger" form="create-form">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="js/nebulas.js"></script>
+    <script src="js/nebPay.js"></script>
+    <script src="js/contractApi.js"></script>
+    <script>
+        'use strict';
+        window.addEventListener("load", function () {
+            let isExtensionExist = typeof (webExtensionWallet) !== "undefined";
+            if (!isExtensionExist) {
+                $(".polls-container").empty();
+                $(".polls-container").append(`<div class="noExtension">
+                    Please install <a target="_blank" href="https://github.com/ChengOrangeJu/WebExtensionWallet">WebExtensionWallet</a>
+            </div>`);
+            }
+            else {
+                let api = new PollContract();
+
+                api.get(50, 0, resp => {
+
+                    $(".polls-container").empty();
+                    if (resp && resp.result) {
+                        let polls = JSON.parse(resp.result);
+                        polls.sort((a, b) => a.date >= b.date ? -1 : 1);
+                        for (const poll of polls) {
+                            $(".polls-container").append(`<div class="d-flex flex-column align-items-center vote" data-poll-id="${poll.id}">
+                                                            <div class="w-100 vote-header">${poll.title}</div>
+                                                            <div class="d-flex align-items-center vote-body">
+                                                                <div class="d-flex flex-column align-items-center option">
+                                                                    <div class="option-header">                                                                           
+                                                                    </div>
+                                                                    <div class="option-body">
+                                                                        <button class="btn-choose" data-option="1">
+                                                                            <img class="option-image" src="${poll.image1 || "img/noAvatar.png"}">
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="d-flex flex-column justify-content-center align-items-center option-footer">${poll.option1}<span>${poll.votes1} votes</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="vs">
+                                                                    <img src="img/logo.png" style="width: 50px">
+                                                                </div>
+                                                                <div class="d-flex flex-column align-items-center option">
+                                                                    <div class="option-header">
+                                                                    </div>
+                                                                    <div class="option-body">
+                                                                        <button class="btn-choose" data-option="2">
+                                                                            <img class="option-image" src="${poll.image2 || "img/noAvatar.png"}">
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="d-flex flex-column justify-content-center align-items-center option-footer">${poll.option2}<span>${poll.votes2} votes</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>`);
+                            let lastVote = $(".polls-container .vote").last();
+                            lastVote.find(".btn-choose").click((event) => {
+                                console.log(event);
+                                let pollId = lastVote.data("poll-id");
+                                let option = $(event.target).data("option");
+                                api.vote(pollId, option);
+                            });
+                        }
+                    }
+                });
+
+                $("#create-form").submit((event) => {
+                    event.preventDefault();
+
+                    let title = $("#title").val();
+                    let first = $("#first").val();
+                    let second = $("#second").val();
+                    let firstImage = $("#first-image").val();
+                    let secondImage = $("#second-image").val();
+
+                    api.create({
+                        title: title,
+                        option1: first,
+                        option2: second,
+                        image1: firstImage,
+                        image2: secondImage
+                    });
+
+                    $("#create-modal").modal('hide');
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
